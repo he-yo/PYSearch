@@ -428,4 +428,7 @@ didSelectSearchSuggestionAtIndex:(NSInteger)index
                                searchBarPlaceholder:(NSString *)placeholder
                                      didSearchBlock:(PYDidSearchBlock)block;
 
+
+@property (nonatomic, copy) NSString *testStr;
+
 @end
