@@ -21,7 +21,9 @@ typedef NS_ENUM(NSInteger, PYHotSearchStyle)  {
     PYHotSearchStyleARCBorderTag,   // broder tag with ARC, color of background is `clearColor`
     PYHotSearchStyleRankTag,        // rank tag, color of background can be custom by `rankTagBackgroundColorHexStrings`
     PYHotSearchStyleRectangleTag,   // rectangle tag, color of background is `clearColor`
+    PYHotSearchStyleRoundTag,
     PYHotSearchStyleDefault = PYHotSearchStyleNormalTag // default is `PYHotSearchStyleNormalTag`
+    
 };
 
 /**
@@ -218,13 +220,6 @@ didSelectSearchSuggestionAtIndex:(NSInteger)index
  The pool of color which are use in colorful tag when `hotSearchStyle` is `PYHotSearchStyleColorfulTag`.
  */
 @property (nonatomic, strong) NSMutableArray<UIColor *> *colorPol;
-
-/**
- Whether swap the popular search and search history location, default is NO.
- 
- Note: It is‘t effective when `searchHistoryStyle` is `PYSearchHistoryStyleCell`.
- */
-@property (nonatomic, assign) BOOL swapHotSeachWithSearchHistory;
 
 /**
  The element of popular search
@@ -429,6 +424,7 @@ didSelectSearchSuggestionAtIndex:(NSInteger)index
                                      didSearchBlock:(PYDidSearchBlock)block;
 
 
-@property (nonatomic, copy) NSString *testStr;
+@property (nonatomic, copy) UIView *extensionView;
+@property (nonatomic, assign) CGFloat extensionViewHeight;
 
 @end

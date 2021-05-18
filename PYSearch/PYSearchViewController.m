@@ -373,14 +373,28 @@
 {
     if (!_searchHistoryView) {
         UIView *searchHistoryView = [[UIView alloc] init];
-        searchHistoryView.py_x = self.hotSearchView.py_x;
-        searchHistoryView.py_y = self.hotSearchView.py_y;
+        searchHistoryView.py_x = self.extensionView.py_x;
+        searchHistoryView.py_y = self.extensionView.py_y;
         searchHistoryView.py_width = self.headerView.py_width - searchHistoryView.py_x * 2;
         searchHistoryView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         [self.headerView addSubview:searchHistoryView];
         _searchHistoryView = searchHistoryView;
     }
     return _searchHistoryView;
+}
+
+- (UIView *)extensionView
+{
+    if (!_extensionView) {
+        UIView *view = [[UIView alloc] init];;
+        view.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+        _extensionView = view;
+    }
+    _extensionView.py_x = 0;
+    _extensionView.py_y = CGRectGetMaxY(self.hotSearchView.frame);
+    _extensionView.py_width = self.view.py_width;
+    [self.headerView addSubview:_extensionView];
+    return _extensionView;
 }
 
 - (NSMutableArray *)searchHistories
@@ -569,7 +583,7 @@
     contentView.py_height = CGRectGetMaxY(contentView.subviews.lastObject.frame);
     
     self.hotSearchView.py_height = CGRectGetMaxY(contentView.frame) + PYSEARCH_MARGIN * 2;
-    self.baseSearchTableView.tableHeaderView.py_height = self.headerView.py_height = MAX(CGRectGetMaxY(self.hotSearchView.frame), CGRectGetMaxY(self.searchHistoryView.frame));
+    self.baseSearchTableView.tableHeaderView.py_height = self.headerView.py_height = MAX(CGRectGetMaxY(self.extensionView.frame), CGRectGetMaxY(self.searchHistoryView.frame));
     
     for (int i = 0; i < PYRectangleTagMaxCol - 1; i++) {
         UIImageView *verticalLine = [[UIImageView alloc] initWithImage:[NSBundle py_imageNamed:@"cell-content-line-vertical"]];
@@ -677,7 +691,7 @@
     
     contentView.py_height = CGRectGetMaxY(self.rankViews.lastObject.frame);
     self.hotSearchView.py_height = CGRectGetMaxY(contentView.frame) + PYSEARCH_MARGIN * 2;
-    self.baseSearchTableView.tableHeaderView.py_height = self.headerView.py_height = MAX(CGRectGetMaxY(self.hotSearchView.frame), CGRectGetMaxY(self.searchHistoryView.frame));
+    self.baseSearchTableView.tableHeaderView.py_height = self.headerView.py_height = MAX(CGRectGetMaxY(self.extensionView.frame), CGRectGetMaxY(self.searchHistoryView.frame));
     [self layoutForDemand];
     
     // Note：When the operating system for the iOS 9.x series tableHeaderView height settings are invalid, you need to reset the tableHeaderView
@@ -739,7 +753,7 @@
     }
     
     [self layoutForDemand];
-    self.baseSearchTableView.tableHeaderView.py_height = self.headerView.py_height = MAX(CGRectGetMaxY(self.hotSearchView.frame), CGRectGetMaxY(self.searchHistoryView.frame));
+    self.baseSearchTableView.tableHeaderView.py_height = self.headerView.py_height = MAX(CGRectGetMaxY(self.extensionView.frame), CGRectGetMaxY(self.searchHistoryView.frame));
     self.baseSearchTableView.tableHeaderView.hidden = NO;
     
     // Note：When the operating system for the iOS 9.x series tableHeaderView height settings are invalid, you need to reset the tableHeaderView
@@ -748,13 +762,10 @@
 }
 
 - (void)layoutForDemand {
-    if (NO == self.swapHotSeachWithSearchHistory) {
-        self.hotSearchView.py_y = PYSEARCH_MARGIN * 2;
-        self.searchHistoryView.py_y = self.hotSearches.count > 0 && self.showHotSearch ? CGRectGetMaxY(self.hotSearchView.frame) : PYSEARCH_MARGIN * 1.5;
-    } else { // swap popular search whith search history
-        self.searchHistoryView.py_y = PYSEARCH_MARGIN * 1.5;
-        self.hotSearchView.py_y = self.searchHistories.count > 0 && self.showSearchHistory ? CGRectGetMaxY(self.searchHistoryView.frame) : PYSEARCH_MARGIN * 2;
-    }
+    self.hotSearchView.py_y = PYSEARCH_MARGIN * 2;
+    self.extensionView.py_y = CGRectGetMaxY(self.hotSearchView.frame);
+    self.extensionView.py_height = self.extensionViewHeight;
+    self.searchHistoryView.py_y = self.hotSearches.count > 0 && self.showHotSearch ? CGRectGetMaxY(self.extensionView.frame) : PYSEARCH_MARGIN * 1.5;
 }
 
 #pragma mark - setter
@@ -780,13 +791,13 @@
     }
 }
 
-- (void)setSwapHotSeachWithSearchHistory:(BOOL)swapHotSeachWithSearchHistory
-{
-    _swapHotSeachWithSearchHistory = swapHotSeachWithSearchHistory;
-    
-    self.hotSearches = self.hotSearches;
-    self.searchHistories = self.searchHistories;
-}
+//- (void)setSwapHotSeachWithSearchHistory:(BOOL)swapHotSeachWithSearchHistory
+//{
+//    _swapHotSeachWithSearchHistory = swapHotSeachWithSearchHistory;
+//
+//    self.hotSearches = self.hotSearches;
+//    self.searchHistories = self.searchHistories;
+//}
 
 - (void)setHotSearchTitle:(NSString *)hotSearchTitle
 {
@@ -917,7 +928,8 @@
     if (PYHotSearchStyleDefault == self.hotSearchStyle
         || PYHotSearchStyleColorfulTag == self.hotSearchStyle
         || PYHotSearchStyleBorderTag == self.hotSearchStyle
-        || PYHotSearchStyleARCBorderTag == self.hotSearchStyle) {
+        || PYHotSearchStyleARCBorderTag == self.hotSearchStyle
+        || PYHotSearchStyleRoundTag == self.hotSearchStyle) {
         [self setupHotSearchNormalTags];
     } else if (PYHotSearchStyleRankTag == self.hotSearchStyle) {
         [self setupHotSearchRankTags];
@@ -1002,6 +1014,16 @@
                 tag.layer.cornerRadius = tag.py_height * 0.5;
             }
             break;
+        case PYHotSearchStyleRoundTag:
+            for (UILabel *tag in self.hotSearchTags) {
+                tag.backgroundColor = [UIColor clearColor];
+                tag.layer.borderColor = PYSEARCH_COLOR(223, 223, 223).CGColor;
+                tag.layer.borderWidth = 0.5;
+                tag.layer.cornerRadius = tag.py_height * 0.5;
+            }
+            [self.hotSearchTags firstObject].backgroundColor = [UIColor py_colorWithHexString:@"0x0744F4"];
+            [self.hotSearchTags firstObject].textColor = [UIColor whiteColor];
+            break;
         case PYHotSearchStyleRectangleTag:
             self.hotSearches = self.hotSearches;
             break;
@@ -1070,9 +1092,6 @@
         [self.baseSearchTableView reloadData];
     } else {
         self.searchHistoryStyle = self.searchHistoryStyle;
-    }
-    if (YES == self.swapHotSeachWithSearchHistory) {
-        self.hotSearches = self.hotSearches;
     }
     PYSEARCH_LOG(@"%@", [NSBundle py_localizedStringForKey:PYSearchEmptySearchHistoryLogText]);
 }
